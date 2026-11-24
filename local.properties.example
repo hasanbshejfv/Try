@@ -1,0 +1,4 @@
+# انسخ هذا الملف إلى local.properties وضع مفتاحك من Google AI Studio.
+# تنبيه: مفتاح API المضمّن داخل APK قابل للاستخراج؛ استخدمه للاختبار الشخصي فقط.
+GEMINI_API_KEY=YOUR_KEY_HERE
+LIVE_MODEL=gemini-3.8-live

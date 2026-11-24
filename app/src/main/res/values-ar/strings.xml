@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">مرشد الشاشة</string>
+    <string name="start">بدء مشاركة الشاشة</string>
+    <string name="stop">إيقاف المشاركة</string>
+    <string name="mode_assist">مساعدة</string>
+    <string name="mode_learn">تعلّم</string>
+    <string name="mode_chess_coach">مدرّب الشطرنج</string>
+    <string name="mode_chess_training">تدريب الشطرنج</string>
+    <string name="st_idle">لا توجد مشاركة</string>
+    <string name="st_connecting">جارٍ الاتصال…</string>
+    <string name="st_live">مباشر — تحدّث بشكل طبيعي ويمكنك مقاطعتي</string>
+    <string name="st_error">خطأ في الاتصال</string>
+    <string name="privacy">لا تتم مشاركة الشاشة إلا بعد موافقتك، ويبقى إشعار ظاهر أثناء المشاركة، ويمكنك الإيقاف في أي لحظة.</string>
+    <string name="no_key">أضف GEMINI_API_KEY في ملف local.properties</string>
+</resources>
