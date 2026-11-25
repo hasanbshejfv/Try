@@ -25,6 +25,18 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Download Stockfish
+        run: |
+          mkdir -p /tmp/stockfish
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          curl -L --fail \
+            https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-android-arm64-universal.tar.gz \
+            -o /tmp/stockfish.tar.gz
+          tar -xzf /tmp/stockfish.tar.gz -C /tmp
+          install -m 755 \
+            /tmp/stockfish/stockfish-android-arm64-universal \
+            app/src/main/jniLibs/arm64-v8a/libstockfish.so
+
       - name: Create local properties
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
