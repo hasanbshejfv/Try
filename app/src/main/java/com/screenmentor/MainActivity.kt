@@ -13,13 +13,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,9 +28,9 @@ import androidx.core.content.ContextCompat
 
 private val Background = Color(0xFF090B14)
 private val Panel = Color(0xFF151A2A)
-private val Purple = Color(0xFF9B7BFF)
-private val Cyan = Color(0xFF55D6E8)
-private val Muted = Color(0xFF9AA3B8)
+private val Purple = Color(0xFF9B8CFF)
+private val Cyan = Color(0xFF55D6D0)
+private val Muted = Color(0xFF929AAF)
 
 class MainActivity : ComponentActivity() {
 
@@ -38,21 +39,22 @@ class MainActivity : ComponentActivity() {
     private val projection =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
-        ) { r ->
-            val data = r.data
+        ) { result ->
 
-            if (r.resultCode == RESULT_OK && data != null) {
-                val i = Intent(this, AssistantService::class.java)
+            val data = result.data
+
+            if (result.resultCode == RESULT_OK && data != null) {
+                val intent = Intent(this, AssistantService::class.java)
                     .setAction(ACTION_START)
-                    .putExtra("resultCode", r.resultCode)
+                    .putExtra("resultCode", result.resultCode)
                     .putExtra("data", data)
                     .putExtra("mode", mode)
 
-                ContextCompat.startForegroundService(this, i)
+                ContextCompat.startForegroundService(this, intent)
             }
         }
 
-    private val perms =
+    private val permissions =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { result ->
@@ -72,8 +74,6 @@ class MainActivity : ComponentActivity() {
         }
 
     private fun start() {
-
-        // CHESS is not connected to Stockfish yet.
         if (mode == "chess") {
             Toast.makeText(
                 this,
@@ -92,15 +92,16 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        val permissions = mutableListOf(
-            Manifest.permission.RECORD_AUDIO
-        )
+        val requestedPermissions =
+            mutableListOf(Manifest.permission.RECORD_AUDIO)
 
         if (Build.VERSION.SDK_INT >= 33) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+            requestedPermissions.add(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
         }
 
-        perms.launch(permissions.toTypedArray())
+        permissions.launch(requestedPermissions.toTypedArray())
     }
 
     private fun stop() {
@@ -123,136 +124,70 @@ class MainActivity : ComponentActivity() {
 
             MaterialTheme(
                 colorScheme = darkColorScheme(
-                    background = Background,
-                    surface = Panel,
                     primary = Purple,
-                    secondary = Cyan
+                    secondary = Cyan,
+                    background = Background,
+                    surface = Panel
                 )
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Background
                 ) {
-
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                             .systemBarsPadding()
-                            .padding(horizontal = 22.dp)
-                            .padding(top = 30.dp, bottom = 24.dp),
-
-                        verticalArrangement = Arrangement.spacedBy(22.dp)
+                            .padding(22.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
 
-                        // HEADER
+                        Spacer(Modifier.height(12.dp))
 
                         Text(
-                            "SCREEN MENTOR",
-                            color = Color.White,
-                            fontSize = 27.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 2.sp
-                        )
-
-                        Text(
-                            "Your screen. Your intelligence.",
-                            color = Muted,
-                            fontSize = 14.sp
-                        )
-
-                        // STATUS
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Panel
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(18.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = when (status) {
-                                        Status.Live -> Color(0xFF164C3A)
-                                        Status.Connecting -> Color(0xFF55451B)
-                                        Status.Error -> Color(0xFF592B38)
-                                        else -> Color(0xFF293044)
-                                    }
-                                ) {
-                                    Spacer(
-                                        Modifier
-                                            .size(12.dp)
-                                    )
-                                }
-
-                                Spacer(Modifier.width(12.dp))
-
-                                Column {
-                                    Text(
-                                        "SESSION STATUS",
-                                        color = Muted,
-                                        fontSize = 10.sp,
-                                        letterSpacing = 1.5.sp
-                                    )
-
-                                    Text(
-                                        text = stringResource(
-                                            when (status) {
-                                                Status.Idle -> R.string.st_idle
-                                                Status.Connecting -> R.string.st_connecting
-                                                Status.Live -> R.string.st_live
-                                                Status.Error -> R.string.st_error
-                                            }
-                                        ),
-                                        color = Color.White,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-                        }
-
-                        // MODE TITLE
-
-                        Text(
-                            "CHOOSE YOUR MODE",
-                            color = Color.White,
+                            text = "SCREEN MENTOR",
+                            color = Purple,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
+                            letterSpacing = 3.sp
                         )
 
-                        // MAIN CARD
+                        Text(
+                            text = "Your smart\nscreen companion.",
+                            color = Color.White,
+                            fontSize = 32.sp,
+                            lineHeight = 39.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Choose your experience",
+                            color = Muted,
+                            fontSize = 15.sp
+                        )
 
                         ModeCard(
                             title = "MAIN",
-                            subtitle = "GEMINI ASSISTANT",
-                            description = stringResource(R.string.main_desc),
-                            symbol = "✦",
-                            accent = Purple,
+                            subtitle = stringResource(R.string.main_desc),
+                            label = "GEMINI AI",
                             selected = mode == "main",
+                            accent = Purple,
                             enabled = !active,
                             onClick = { mode = "main" }
                         )
 
-                        // CHESS CARD
-
                         ModeCard(
                             title = "CHESS",
-                            subtitle = "STOCKFISH ENGINE",
-                            description = stringResource(R.string.chess_desc),
-                            symbol = "♟",
-                            accent = Cyan,
+                            subtitle = stringResource(R.string.chess_desc),
+                            label = "STOCKFISH ENGINE",
                             selected = mode == "chess",
+                            accent = Cyan,
                             enabled = !active,
                             onClick = { mode = "chess" }
                         )
 
-                        // START BUTTON
+                        Spacer(Modifier.height(4.dp))
 
                         Button(
                             onClick = {
@@ -260,50 +195,88 @@ class MainActivity : ComponentActivity() {
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(62.dp),
+                                .height(60.dp),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (active)
-                                    Color(0xFFB83F58)
-                                else
-                                    Purple
+                                containerColor =
+                                    if (active) Color(0xFFB94B61)
+                                    else Purple,
+                                contentColor = Color.White
                             )
                         ) {
                             Text(
-                                stringResource(
-                                    if (active) R.string.stop
-                                    else R.string.start
-                                ),
-                                fontSize = 15.sp,
+                                text = if (active) "STOP SESSION"
+                                else if (mode == "chess") "OPEN CHESS"
+                                else "START SESSION",
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             )
                         }
 
-                        // TRANSCRIPT
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Panel
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(18.dp),
+                                verticalArrangement =
+                                    Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "SESSION STATUS",
+                                    color = Muted,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp
+                                )
+
+                                Text(
+                                    text = stringResource(
+                                        when (status) {
+                                            Status.Idle -> R.string.st_idle
+                                            Status.Connecting ->
+                                                R.string.st_connecting
+                                            Status.Live -> R.string.st_live
+                                            Status.Error -> R.string.st_error
+                                        }
+                                    ),
+                                    color = when (status) {
+                                        Status.Live -> Cyan
+                                        Status.Error -> Color(0xFFFF7185)
+                                        else -> Color.White
+                                    },
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
 
                         if (transcript.isNotBlank()) {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(18.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = Panel
                                 )
                             ) {
                                 Column(
-                                    Modifier.padding(18.dp)
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        "LIVE TRANSCRIPT",
+                                        text = "CONVERSATION",
                                         color = Cyan,
-                                        fontSize = 11.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
 
-                                    Spacer(Modifier.height(10.dp))
-
                                     Text(
-                                        transcript,
+                                        text = transcript,
                                         color = Color.White,
                                         fontSize = 14.sp
                                     )
@@ -311,14 +284,16 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(12.dp))
 
                         Text(
-                            stringResource(R.string.privacy),
+                            text = stringResource(R.string.privacy),
                             color = Muted,
                             fontSize = 11.sp,
                             lineHeight = 17.sp
                         )
+
+                        Spacer(Modifier.height(12.dp))
                     }
                 }
             }
@@ -330,14 +305,12 @@ class MainActivity : ComponentActivity() {
 private fun ModeCard(
     title: String,
     subtitle: String,
-    description: String,
-    symbol: String,
-    accent: Color,
+    label: String,
     selected: Boolean,
+    accent: Color,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -347,80 +320,46 @@ private fun ModeCard(
             ),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected)
-                Color(0xFF20243A)
-            else
-                Panel
+            containerColor = Panel
         ),
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
-            color = if (selected)
-                accent
-            else
-                Color(0xFF293044)
+            color = if (selected) accent
+            else Color(0xFF292F42)
         )
     ) {
-
-        Row(
+        Column(
             modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            Surface(
-                modifier = Modifier.size(58.dp),
-                shape = RoundedCornerShape(17.dp),
-                color = accent.copy(alpha = 0.15f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        symbol,
-                        color = accent,
-                        fontSize = 30.sp
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
                 Text(
-                    title,
-                    color = Color.White,
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    text = title,
+                    color = accent,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp
                 )
 
                 Text(
-                    subtitle,
-                    color = accent,
+                    text = if (selected) "SELECTED" else label,
+                    color = if (selected) accent else Muted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    description,
-                    color = Muted,
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp
+                    letterSpacing = 1.sp
                 )
             }
 
-            if (selected) {
-                Text(
-                    "✓",
-                    color = accent,
-                    fontSize = 23.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                text = subtitle,
+                color = Color.White,
+                fontSize = 14.sp,
+                lineHeight = 21.sp
+            )
         }
     }
 }
