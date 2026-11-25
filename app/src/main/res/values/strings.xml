@@ -1,15 +1,22 @@
 <resources>
     <string name="app_name">Screen Mentor</string>
-    <string name="start">Start screen sharing</string>
-    <string name="stop">Stop sharing</string>
-    <string name="mode_assist">Assist</string>
-    <string name="mode_learn">Learn</string>
-    <string name="mode_chess_coach">Chess coach</string>
-    <string name="mode_chess_training">Chess training</string>
-    <string name="st_idle">Not sharing</string>
-    <string name="st_connecting">Connecting…</string>
-    <string name="st_live">Live — speak naturally, you can interrupt</string>
+
+    <string name="start">START SESSION</string>
+    <string name="stop">STOP SESSION</string>
+
+    <string name="mode_main">MAIN</string>
+    <string name="mode_chess">CHESS</string>
+
+    <string name="main_desc">Your intelligent screen and voice assistant, powered by Gemini.</string>
+    <string name="chess_desc">Real-time chess analysis powered by Stockfish.</string>
+
+    <string name="st_idle">Ready to start</string>
+    <string name="st_connecting">Connecting...</string>
+    <string name="st_live">Session is live</string>
     <string name="st_error">Connection error</string>
-    <string name="privacy">Your screen is only shared after you approve, a notification stays visible while sharing, and you can stop at any time.</string>
-    <string name="no_key">Add GEMINI_API_KEY to local.properties</string>
+
+    <string name="privacy">Your screen is shared only after your approval. You can stop sharing at any time.</string>
+
+    <string name="no_key">GEMINI_API_KEY is missing.</string>
+    <string name="chess_coming">Chess engine is not connected yet. We are building it.</string>
 </resources>
