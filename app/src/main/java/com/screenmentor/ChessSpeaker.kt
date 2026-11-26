@@ -11,18 +11,27 @@ class ChessSpeaker(context: Context) : TextToSpeech.OnInitListener {
     @Volatile
     private var ready = false
 
-    private var language = Locale("ar", "IQ")
-
     override fun onInit(status: Int) {
         if (status != TextToSpeech.SUCCESS) return
 
-        val arabicResult = tts.setLanguage(language)
+        val result = tts.setLanguage(Locale("ar", "SA"))
 
-        if (arabicResult == TextToSpeech.LANG_MISSING_DATA ||
-            arabicResult == TextToSpeech.LANG_NOT_SUPPORTED
+        if (result == TextToSpeech.LANG_MISSING_DATA ||
+            result == TextToSpeech.LANG_NOT_SUPPORTED
         ) {
-            language = Locale.US
-            tts.setLanguage(language)
+            ready = false
+            return
+        }
+
+        // محاولة اختيار صوت رجالي إذا كان متوفراً
+        val maleVoice = tts.voices?.firstOrNull {
+            it.locale.language == "ar" &&
+            (it.name.contains("male", ignoreCase = true) ||
+             it.name.contains("masculine", ignoreCase = true))
+        }
+
+        if (maleVoice != null) {
+            tts.voice = maleVoice
         }
 
         ready = true
@@ -34,11 +43,7 @@ class ChessSpeaker(context: Context) : TextToSpeech.OnInitListener {
         val from = move.substring(0, 2)
         val to = move.substring(2, 4)
 
-        val message = if (language.language == "ar") {
-            "أفضل نقلة، من المربع $from إلى المربع $to"
-        } else {
-            "Best move, $from to $to"
-        }
+        val message = "أفضل نقلة هي من المربع $from إلى المربع $to"
 
         tts.speak(
             message,
