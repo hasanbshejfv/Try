@@ -7,32 +7,56 @@ plugins {
 }
 
 val props = Properties().apply {
-    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    rootProject.file("local.properties")
+        .takeIf { it.exists() }
+        ?.inputStream()
+        ?.use { load(it) }
 }
 
-android {    packaging {
-        jniLibs {
-            useLegacyPackaging = true
-            keepDebugSymbols += "**/libstockfish.so"
-        }
-    }
+android {
     namespace = "com.screenmentor"
     compileSdk = 35
+
     defaultConfig {
         applicationId = "com.screenmentor"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "0.2"
-        buildConfigField("String", "GEMINI_API_KEY", "\"${props.getProperty("GEMINI_API_KEY", "")}\"")
-        buildConfigField("String", "LIVE_MODEL", "\"${props.getProperty("LIVE_MODEL", "gemini-3.8-live")}\"")
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${props.getProperty("GEMINI_API_KEY", "")}\""
+        )
+
+        buildConfigField(
+            "String",
+            "LIVE_MODEL",
+            "\"${props.getProperty("LIVE_MODEL", "gemini-3.8-live")}\""
+        )
     }
-    buildFeatures { compose = true; buildConfig = true }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            keepDebugSymbols += "**/libstockfish.so"
+        }
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
