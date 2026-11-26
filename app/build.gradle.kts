@@ -10,7 +10,12 @@ val props = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
 
-android {
+android {    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            keepDebugSymbols += "**/libstockfish.so"
+        }
+    }
     namespace = "com.screenmentor"
     compileSdk = 35
     defaultConfig {
