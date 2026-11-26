@@ -37,9 +37,9 @@ class MainActivity : ComponentActivity() {
     private var mode by mutableStateOf("main")
 
     private var chessEngine: StockfishEngine? = null
+    private var chessSpeaker: ChessSpeaker? = null
 
     private var chessRunning by mutableStateOf(false)
-
     private var chessMessage by mutableStateOf("")
 
     private val projection =
@@ -88,6 +88,9 @@ class MainActivity : ComponentActivity() {
             chessRunning = true
             chessMessage = "Starting Stockfish..."
 
+            chessSpeaker?.release()
+            chessSpeaker = ChessSpeaker(applicationContext)
+
             val engine = StockfishEngine(applicationContext)
             chessEngine = engine
 
@@ -107,6 +110,9 @@ class MainActivity : ComponentActivity() {
 
                         chessEngine?.stop()
                         chessEngine = null
+
+                        chessSpeaker?.release()
+                        chessSpeaker = null
 
                         Toast.makeText(
                             this,
@@ -136,13 +142,18 @@ class MainActivity : ComponentActivity() {
                         runOnUiThread {
 
                             if (move.isNotBlank()) {
+
                                 chessMessage = "Best move: $move"
+
+                                // نطق النقلة بصوت الهاتف
+                                chessSpeaker?.speakMove(move)
 
                                 Toast.makeText(
                                     this,
                                     "Stockfish move: $move",
                                     Toast.LENGTH_LONG
                                 ).show()
+
                             } else {
                                 chessMessage = "No move returned"
                             }
@@ -182,6 +193,9 @@ class MainActivity : ComponentActivity() {
             chessEngine?.stop()
             chessEngine = null
 
+            chessSpeaker?.release()
+            chessSpeaker = null
+
             chessRunning = false
             chessMessage = "Stockfish stopped"
 
@@ -203,6 +217,10 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         chessEngine?.stop()
         chessEngine = null
+
+        chessSpeaker?.release()
+        chessSpeaker = null
+
         chessRunning = false
 
         super.onDestroy()
