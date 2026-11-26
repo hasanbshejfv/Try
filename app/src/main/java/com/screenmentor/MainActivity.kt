@@ -36,6 +36,12 @@ class MainActivity : ComponentActivity() {
 
     private var mode by mutableStateOf("main")
 
+    private var chessEngine: StockfishEngine? = null
+
+    private var chessRunning by mutableStateOf(false)
+
+    private var chessMessage by mutableStateOf("")
+
     private val projection =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -74,12 +80,77 @@ class MainActivity : ComponentActivity() {
         }
 
     private fun start() {
+
         if (mode == "chess") {
+
+            if (chessRunning) return
+
+            chessRunning = true
+            chessMessage = "Starting Stockfish..."
+
+            val engine = StockfishEngine(applicationContext)
+            chessEngine = engine
+
             Toast.makeText(
                 this,
-                R.string.chess_coming,
-                Toast.LENGTH_LONG
+                "Starting Stockfish...",
+                Toast.LENGTH_SHORT
             ).show()
+
+            engine.start { success, message ->
+
+                runOnUiThread {
+
+                    if (!success) {
+                        chessRunning = false
+                        chessMessage = message
+
+                        chessEngine?.stop()
+                        chessEngine = null
+
+                        Toast.makeText(
+                            this,
+                            message,
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        return@runOnUiThread
+                    }
+
+                    chessMessage = "Stockfish is ready"
+
+                    Toast.makeText(
+                        this,
+                        "Stockfish is ready!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    val startingFen =
+                        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+                    engine.analyze(
+                        fen = startingFen,
+                        moveTimeMs = 1500
+                    ) { move ->
+
+                        runOnUiThread {
+
+                            if (move.isNotBlank()) {
+                                chessMessage = "Best move: $move"
+
+                                Toast.makeText(
+                                    this,
+                                    "Stockfish move: $move",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                chessMessage = "No move returned"
+                            }
+                        }
+                    }
+                }
+            }
+
             return
         }
 
@@ -105,22 +176,50 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stop() {
+
+        if (mode == "chess") {
+
+            chessEngine?.stop()
+            chessEngine = null
+
+            chessRunning = false
+            chessMessage = "Stockfish stopped"
+
+            Toast.makeText(
+                this,
+                "Stockfish stopped",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            return
+        }
+
         startService(
             Intent(this, AssistantService::class.java)
                 .setAction(ACTION_STOP)
         )
     }
 
+    override fun onDestroy() {
+        chessEngine?.stop()
+        chessEngine = null
+        chessRunning = false
+
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
+
             val status by SessionState.status.collectAsState()
             val transcript by SessionState.transcript.collectAsState()
 
             val active =
                 status == Status.Live ||
-                status == Status.Connecting
+                status == Status.Connecting ||
+                chessRunning
 
             MaterialTheme(
                 colorScheme = darkColorScheme(
@@ -130,17 +229,21 @@ class MainActivity : ComponentActivity() {
                     surface = Panel
                 )
             ) {
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Background
                 ) {
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                             .systemBarsPadding()
                             .padding(22.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+
+                        verticalArrangement =
+                            Arrangement.spacedBy(20.dp)
                     ) {
 
                         Spacer(Modifier.height(12.dp))
@@ -174,7 +277,9 @@ class MainActivity : ComponentActivity() {
                             selected = mode == "main",
                             accent = Purple,
                             enabled = !active,
-                            onClick = { mode = "main" }
+                            onClick = {
+                                mode = "main"
+                            }
                         )
 
                         ModeCard(
@@ -184,30 +289,43 @@ class MainActivity : ComponentActivity() {
                             selected = mode == "chess",
                             accent = Cyan,
                             enabled = !active,
-                            onClick = { mode = "chess" }
+                            onClick = {
+                                mode = "chess"
+                            }
                         )
 
                         Spacer(Modifier.height(4.dp))
 
                         Button(
                             onClick = {
-                                if (active) stop() else start()
+                                if (active) {
+                                    stop()
+                                } else {
+                                    start()
+                                }
                             },
+
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(60.dp),
+
                             shape = RoundedCornerShape(18.dp),
+
                             colors = ButtonDefaults.buttonColors(
                                 containerColor =
                                     if (active) Color(0xFFB94B61)
                                     else Purple,
+
                                 contentColor = Color.White
                             )
                         ) {
+
                             Text(
-                                text = if (active) "STOP SESSION"
-                                else if (mode == "chess") "OPEN CHESS"
-                                else "START SESSION",
+                                text =
+                                    if (active) "STOP SESSION"
+                                    else if (mode == "chess") "OPEN CHESS"
+                                    else "START SESSION",
+
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
@@ -216,16 +334,21 @@ class MainActivity : ComponentActivity() {
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
+
                             shape = RoundedCornerShape(16.dp),
+
                             colors = CardDefaults.cardColors(
                                 containerColor = Panel
                             )
                         ) {
+
                             Column(
                                 modifier = Modifier.padding(18.dp),
+
                                 verticalArrangement =
                                     Arrangement.spacedBy(8.dp)
                             ) {
+
                                 Text(
                                     text = "SESSION STATUS",
                                     color = Muted,
@@ -235,20 +358,40 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 Text(
-                                    text = stringResource(
-                                        when (status) {
-                                            Status.Idle -> R.string.st_idle
-                                            Status.Connecting ->
-                                                R.string.st_connecting
-                                            Status.Live -> R.string.st_live
-                                            Status.Error -> R.string.st_error
-                                        }
-                                    ),
-                                    color = when (status) {
-                                        Status.Live -> Cyan
-                                        Status.Error -> Color(0xFFFF7185)
-                                        else -> Color.White
-                                    },
+                                    text =
+                                        if (mode == "chess" && chessRunning) {
+                                            chessMessage
+                                        } else {
+                                            stringResource(
+                                                when (status) {
+                                                    Status.Idle ->
+                                                        R.string.st_idle
+
+                                                    Status.Connecting ->
+                                                        R.string.st_connecting
+
+                                                    Status.Live ->
+                                                        R.string.st_live
+
+                                                    Status.Error ->
+                                                        R.string.st_error
+                                                }
+                                            )
+                                        },
+
+                                    color =
+                                        if (mode == "chess" && chessRunning) {
+                                            Cyan
+                                        } else {
+                                            when (status) {
+                                                Status.Live -> Cyan
+                                                Status.Error ->
+                                                    Color(0xFFFF7185)
+
+                                                else -> Color.White
+                                            }
+                                        },
+
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -256,18 +399,24 @@ class MainActivity : ComponentActivity() {
                         }
 
                         if (transcript.isNotBlank()) {
+
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
+
                                 shape = RoundedCornerShape(16.dp),
+
                                 colors = CardDefaults.cardColors(
                                     containerColor = Panel
                                 )
                             ) {
+
                                 Column(
                                     modifier = Modifier.padding(16.dp),
+
                                     verticalArrangement =
                                         Arrangement.spacedBy(8.dp)
                                 ) {
+
                                     Text(
                                         text = "CONVERSATION",
                                         color = Cyan,
@@ -311,6 +460,7 @@ private fun ModeCard(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -318,25 +468,38 @@ private fun ModeCard(
                 enabled = enabled,
                 onClick = onClick
             ),
+
         shape = RoundedCornerShape(22.dp),
+
         colors = CardDefaults.cardColors(
             containerColor = Panel
         ),
+
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
+
             color = if (selected) accent
             else Color(0xFF292F42)
         )
     ) {
+
         Column(
             modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+
+            verticalArrangement =
+                Arrangement.spacedBy(12.dp)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+
+                horizontalArrangement =
+                    Arrangement.SpaceBetween,
+
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
+
                 Text(
                     text = title,
                     color = accent,
